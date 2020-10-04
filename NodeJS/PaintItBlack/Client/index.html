@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ajax paint it black.2</title>
+</head>
+<body>
+  <div id="container">
+    <canvas id="canvas"></canvas>
+  </div>
+  <pre>
+    <img src="https://welkombijma.nl/wp-content/themes/welkombijma/public/img/logo.svg" width="30" alt="logo Ma" id="logo">
+    october 2020
+  </pre>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const ega = ["#000000", "#0000aa", "#00aa00", "#00aaaa", "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa", "#ffffff", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#555555"]; // colors
+  const canvas = document.querySelector('canvas');
+  const context = canvas.getContext('2d');
+  const boxWidth = boxHeight = 40;
+
+  let selectedColor = 0;
+  let drawing = [];
+  let pallet = [];
+
+  canvas.width = 1250;
+  canvas.height = 800;
+
+  socket.on("LoadCanvas", function (_drawing) {
+    drawing = _drawing;
+  });
+  socket.on("LoadPallet", function (_pallet) {
+    pallet = _pallet;
+  });
+
+  socket.on("UpdateBit", function(x, y, color, w, h) {
+    console.log(color)
+    console.log("Update")
+    context.beginPath();
+    context.fillStyle = ega[color];
+    context.rect(x, y, w, h);
+    context.stroke();
+    context.fill();
+    context.closePath();
+  });
+
+
+  canvas.addEventListener('mousedown', (e) => {
+    let box = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - box.left; // is mouse in the box?
+    let mouseY = e.clientY - box.top; // is mouse in the box?
+    for (let i = 0; i < drawing.length; i++) {
+      if (mouseX > drawing[i].x && mouseX < drawing[i].x + boxWidth && mouseY > drawing[i].y && mouseY < drawing[i].y + boxHeight) {
+        if (this.colorBit) {
+          console.log('color bit');
+        } else {
+          drawing[i].color = selectedColor;
+          socket.emit("UpdateBit", drawing[i].x, drawing[i].y, drawing[i].color)
+        }
+      }
+    }
+
+    for (let i = 0; i < pallet.length; i++) {
+      if (mouseX > pallet[i].x && mouseX < pallet[i].x + boxWidth && mouseY > pallet[i].y && mouseY < pallet[i].y + boxHeight) {
+        selectedColor = pallet[i].color;
+      }
+    }
+  })
+
+
+</script>
+
+</html>
